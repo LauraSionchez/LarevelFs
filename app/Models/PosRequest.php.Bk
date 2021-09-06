@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use App\Traits\EncryptationId;
+
+class PosRequest extends Model
+{
+    use EncryptationId;
+
+    protected $table = "pos_requests";  
+    protected $fillable = ['id','storage_id','user_id','date_register','ip'];
+    protected $connection = "mysql";
+    public $timestamps = false;
+    protected $appends = ['details','crypt_id'];
+
+    public function getDetails() 
+    {
+        return $this->hasMany(PosRequestDetail::class, 'pos_request_id');
+    }
+    public function getDetailsAttribute() 
+    {
+        return $this->getDetails;
+    } 
+}

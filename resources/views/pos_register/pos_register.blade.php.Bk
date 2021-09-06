@@ -1,0 +1,185 @@
+{{ Form::open(['id'=>'pos_register','autocomplete'=>'Off', "onSubmit"=>"displayAll()", "enctype"=>"multipart/form-data"]) }}
+<div class="content-table">
+    <h3>{{ __('POS Register') }}</h3>
+        
+    <div class="content-space"> 
+
+        <div class="content-table inside content-space">      
+     
+            <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-6 mb-4">
+                    <div class="form-group floating-label">
+                        {{ Form::select('provider', $provider, null, ['class' => 'form-select required', 'id'=> 'provider','placeholder'=>__('Select...'), 'required' => 'required']) }} 
+                        {{Form::label('provider', __('Provider'), ['class' => 'title'])}}
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-12 col-md-6 mb-4">
+                    <div class="form-group floating-label">
+                        {{ Form::text('invoice_number', null, ['class' => 'form-control number required', 'id'=> 'invoice_number', 'placeholder'=>__('Invoice number'), 'required' => 'required']) }}
+                        {{ Form::label('invoice_number', __('Invoice number'), ['class' => 'title'])}}
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-12 col-md-6 mb-4">
+                    <div class="form-group floating-label">
+                        {{ Form::select('model', $models, null, ['class' => 'form-select required', 'id'=> 'model', 'placeholder'=>__('Select...'), 'required' => 'required'], $models_quantity) }} 
+                         {{ Form::label('model', __('Model'), ['class' => 'title'])}}
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-12 col-md-6 mb-4">
+                    <div class="form-group floating-label">
+                        {{ Form::number('num_box', null, ['class' => 'form-control number required', 'id'=> 'num_box', 'min'=>'1', 'placeholder'=>__('Box number'),'required' => 'required']) }}
+                         {{ Form::label('num_box', __('Box number'), ['class' => 'title'])}}
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-12 col-md-6 mb-4">
+                    <div class="form-group floating-label">
+                        {{ Form::number('amo_box', null, ['class' => 'form-control number required', 'id'=> 'amo_box', 'min'=>'1', 'placeholder'=>__('Amount of box'), 'required' => 'required']) }}
+                        {{ Form::label('amo_box', __('Amount of box'), ['class' => 'title'])}}
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-12 col-md-6 mb-4">
+                    <div class="form-group floating-label">
+                        {{ Form::number('ini_serial', null, ['class' => 'form-control onlyText required', 'id'=> 'ini_serial', 'min'=>'1', 'placeholder'=>__('Initial serial'),'required' => 'required']) }}
+                        {{ Form::label('ini_serial', __('Initial serial'), ['class' => 'title'])}}
+                    </div>
+                </div>
+                <div class="col-xs-12 col-sm-12 col-md-5 mb-4 te-1">
+                    <div class="form-group floating-label">
+                        {{ Form::number('num_lot', null, ['class' => 'form-control number required', 'id'=> 'num_lot', 'min'=>'1', 'placeholder'=>__('Lot number'), 'required' => 'required']) }}
+                         {{ Form::label('num_lot', __('Lot number'), ['class' => 'title'])}}
+                    </div>
+                </div>
+                 <div class="col-xs-1 col-sm-1 col-md-1 ">
+                    {{ Form::button('<i class="fa fa-plus"></i>', ['class' => 'btn btn-primary', 'id' => 'add_pos']) }}
+                </div>
+            </div>
+        
+        </div>
+
+    </div>
+{{ Form::close() }}         
+{{ Form::open(['id'=>'pos_register_table_form','autocomplete'=>'Off', "route"=>"pos_register.store" ,'class' => 'validate', "enctype"=>"multipart/form-data"]) }} 
+{{ Form::hidden('provider_hidden', null, ['id'=> 'provider_hidden'])}}
+{{ Form::hidden('invoice_hidden', null, ['id'=> 'invoice_hidden'])}}           
+   <table class="dataTable table" cellspacing="0" width="100%" id="table_pos">
+        <thead>
+            <tr>
+                <th>{{__('Model')}}</th>
+                <th>{{__('NÂ° Box')}}</th>
+                <th>{{__('Serial')}}</th>
+                <th>{{__('Amount of POS')}}</th>
+                <th>{{__('Actions')}}</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+    <div class="col-3 mx-auto content-space">
+        {{ Form::button(__('Save'), ['class' => 'btn btn-primary save', 'type' => 'submit']) }}
+    </div>
+</div>
+
+{{ Form::close() }}
+<script type="text/javascript">
+
+var cont_boxs=0;
+$(document).ready(function () {
+    $('#add_excel').on('click',function(){  
+        console.log('abc');
+    });
+    $('#add_pos').on('click',function(){   
+        if($('#pos_register').valid()){  
+              $('#provider_hidden').val($('#provider').val());
+              $('#invoice_hidden').val($('#invoice_number').val());
+            if($('.mdl[value='+$('#model').val()+']').length == 0){
+                for(i=0; i<$('#amo_box').val(); i++){
+
+                    let s_begin = parseInt($('#ini_serial').val(), 10) + parseInt(( $('#model option:selected').attr('data-quantity') * i), 10);
+                    let s_end   = ( s_begin +  parseInt($('#model option:selected').attr('data-quantity'), 10) -1   );
+                    let number_box = parseInt($('#num_box').val(), 10) + i; 
+
+                    let input_number_box = '<input type="hidden" name="boxes['+cont_boxs+'][number_box]" value="'+number_box+'" />';
+                    let input_model_id = '<input type="hidden" class="mdl" name="boxes['+cont_boxs+'][model_id]" value="'+$('#model').val()+'" />';
+                    let input_initial_serial = '<input type="hidden" name="boxes['+cont_boxs+'][initial_serial]" value="'+s_begin+'" />';
+                    let input_number_lot = '<input type="hidden" name="boxes['+cont_boxs+'][number_lot]" value="'+$("#num_lot").val()+'" />';
+
+                    cont_boxs++;
+
+                    let fields = input_number_box + input_model_id + input_initial_serial + input_number_lot; 
+
+                    let row_table = [    
+                        fields+$('#model option:selected').text(),
+                        number_box,
+                        $('#model option:selected').attr('data-serial') + s_begin + '/'+ $('#model option:selected').attr('data-serial') + s_end ,
+                        $('#model option:selected').attr('data-quantity'),
+                        '<a onClick="delete_pos_r(this);" href="#" class="btn btn-moderation delete" title="{{ __("Delete")}}" ><i class="fa fa-trash"></i>{{ __("Delete ")}}</a>'
+                    ];
+                   $('#table_pos').dataTable().fnAddData(row_table);  
+                }   
+                toastr['info']('{{ _('Adding the POS model to the table') }}');
+                clean_fields();   
+            } else {
+                toastr['info']('{{ _('The POS model is already added to the table') }}', '{{ _('POS Request') }}',
+                { "progressBar"  : true,
+                  "onclick": null,
+                  "positionClass": "toast-bottom-center"
+                });
+            }
+        }
+    });
+    $("#excel_save").on('click', function (){
+        var formData = new FormData(document.getElementById("pos_register"));
+        $.ajax({
+            url: "{{route('pos_register.excel')}}",
+            type: "post",
+            data: formData,
+            processData: false,  
+            contentType: false,   
+            success: function(response) {          
+                for(i in response.statistics) {
+                    model = i;
+                    boxs = [];
+                    cant_pos = [];
+                    for(j in response.statistics[i]){
+                        boxs.push(j);
+                        cant_pos.push(response.statistics[i][j]);
+                    }
+                    for(k in boxs ){
+                        if (k==0){
+                            good = $.inArray( model, response.models_good )==-1 ? 'X::':'';     
+                            rowSpan= ' <td rowspan="'+boxs.length+'" >'+ good +model+'</td> '; 
+                        }else{
+                            rowSpan= '';     
+                        }
+                        tr = '<tr class="prueba"> '+rowSpan+' <td>'+boxs[k]+'</td> <td>'+cant_pos[k]+'</td> </tr>';
+                        $('#table_excel tbody').append(tr);
+                    }
+                    //tr = '<tr class="prueba"> <td >'+i+'</td>  <td>'+i+'</td> <td>'+i+'</td> </tr>';
+                }  
+            } 
+        })
+    });
+});
+       // $('.prueba').remove();
+function delete_pos_r(obj){
+    tr =  $(obj).parents('tr').get()  ;
+    $("#table_pos").DataTable().row(tr).remove().draw();
+}
+function displayAll(){
+    $("#table_pos").DataTable().rows().nodes().page.len(-1).draw(false);
+    return true;
+}
+function show_detail(value){
+    $("#remoteModal").modal("show");
+    $.get("display_chargeback/"+value, function (data){
+        $("#remoteModal .modal-content").html(data);
+    },'html')
+}
+function clean_fields(){
+    $("#model").val('').trigger('change');
+    $("#num_box").val('');
+    $("#amo_box").val('');
+    $("#ini_serial").val('');
+    $("#num_lot").val('');
+}
+</script>

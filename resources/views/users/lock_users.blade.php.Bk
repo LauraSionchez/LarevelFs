@@ -1,0 +1,78 @@
+<div class="row" id="principal_modal">
+	{{ Form::open(['id'=>'lock_users', 'autocomplete'=>'Off', 'class'=>'Validate', "enctype"=>"multipart/form-data"]) }}
+	{{ Form::hidden('id', $item['crypt_id'], ['id'=> 'id'])}}
+	    <div class="col-md-12">
+	        <div class="content-space">
+	            <h2 class="swal2-title" id="modal_title" style="display: block;"> 
+	            </h2>
+	            	<div class="swal2-content" id="buttons">
+	            		
+ 						
+	            	</div>
+		            <div class="swal2-content" id="layOff">
+		                <div class="container">
+		    				<p>  {{  __('Select the time range for the suspension') }}  </p>      	
+			                <div class="row">
+			                	<div class="col-xs-12 col-sm-12 col-md-6 mb-4">
+						            <div class="form-group floating-label">
+										{{	Form::text('date_in', date('d/m/Y'), ['id'=>'date_in','class'=>'form-control date_in', 'placeholder'=>__('Date Start'), 'required' => 'required' ]) }}
+										{{	Form::label('', __('Date Start'), ['class' => 'title'])}}    
+									</div>
+								</div>
+								<div class="col-xs-12 col-sm-12 col-md-6 mb-4">
+						            <div class="form-group floating-label">
+										{{  Form::text('date_out',  date('d/m/Y'), ['id'=>'date_out','class'=>'form-control date_in', 'placeholder'=>__('Date End'), 'required' => 'required']) }}
+										{{	Form::label('', __('Date End'), ['class' => 'title'])}}
+									</div>
+								</div>
+							</div>
+		                </div>
+		                 
+			                {{ Form::button('<i class="far fa-save"></i>'.' '.__('Save'), ['class' => 'btn btn-primary ', 'id' => 'save']) }}
+			                {{ Form::button('<i class="fas fa-lock"></i>'.' '.__('Block user'), ['class' => 'btn btn-primary ', 'id' => 'block']) }}
+		           		
+		            </div>
+		       
+	        </div>
+	    </div>
+    {{ Form::close() }}       
+</div>
+<script type="text/javascript">
+
+	$(document).ready(function (){
+		$('.date_in').datepicker({
+	        format: 'dd/mm/yyyy',
+	        autoclose: true,
+	        closeOnDateSelect: true,
+	    });
+
+	    $('#block').on('click', function(value){ 
+			$.get("U0001.lock_user/"+ $('#id').val(), function(data){
+	            $('#remoteModal').modal('hide');
+	            window.location.reload();
+				toastr[data.type_message](data.message, data.tittle,
+	                    { "progressBar"  : true,
+	                      "onclick": null,
+	                      "positionClass": "toast-bottom-center"
+	                    });
+			},'json').fail(function(){
+	            toastr.error('{{ __('Your request could not be processed') }}');
+	            swal.close();
+	        });
+		});
+		
+		$('#save').on('click', function(value){
+			params = $('#id').val()+'/'+saveDate($("#date_in").val())+'/'+saveDate($("#date_out").val());
+			
+	        $.get("U0001.susp_user/"+ params, function(data){
+	            toastr[data.type_message](data.message, data.title,{
+	                "progressBar": true,
+	                "onclick": null,
+	                "positionClass": "toast-bottom-center"
+	            });
+	            window.location.reload();
+	        },'json');	        
+	    });	
+	});
+	
+</script>

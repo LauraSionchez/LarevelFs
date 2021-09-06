@@ -1,0 +1,261 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\AgencyController;
+use App\Http\Controllers\StorageController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\BankController;
+use App\Http\Controllers\TypeCoinController;
+use App\Http\Controllers\TypeStorageController;
+use App\Http\Controllers\ProfileProcessController;
+use App\Http\Controllers\PosRegisterController;
+use App\Http\Controllers\PosRequestController;
+use App\Http\Controllers\PosShipmentController;
+use App\Http\Controllers\PosInventoryController;
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\MunicipalityController;
+use App\Http\Controllers\CityController;
+use App\Http\Controllers\StateController;
+
+/*
+  |--------------------------------------------------------------------------
+  | Web Routes
+  |--------------------------------------------------------------------------
+  |
+  | Here is where you can register web routes for your application. These
+  | routes are loaded by the RouteServiceProvider within a group which
+  | contains the "web" middleware group. Now create something great!
+  |
+ */
+
+Route::get('language/{lang?}', function($lang = 'en') {
+    session()->put('language', $lang);
+    //return redirect()->back();
+    return redirect('/home');
+})->name('language');
+
+Route::get('login', [UserController::class, 'login'])->name('login');
+Route::get('logout', [UserController::class, 'logout'])->name('logout');
+Route::post('login', [UserController::class, 'login'])->name('login.in');
+
+Route::get('unauthenticated', function () {
+    return view('errors.unauthenticated');
+})->name('errors.unauthenticated');
+
+Route::get('permission_denied', function () {
+    return view('errors.permission_denied');
+})->name('errors.permission_denied');
+
+Route::get('avatar/{code}', function ($code) {
+
+
+    $path = storage_path('app/img/avatar/' . $code . '.png');
+
+    if (!File::exists($path)) {
+        return response()->json(['message' => 'Image not found.'], 404);
+    }
+
+    $file = File::get($path);
+    $type = File::mimeType($path);
+
+    $response = Response::make($file, 200);
+    $response->header("Content-Type", $type);
+
+    return $response;
+})->name('avatar');
+
+
+Route::get('/', function () {
+    if (Auth::check()) {
+        return redirect('/home');
+    } else {
+        return redirect('/login');
+    }
+});
+
+
+Route::get('get_dependents/{state_id}', [StateController::class, 'getAllDependent'])->name('getAllDependent');
+
+Route::get('get_municipalities/{state_id}', [MunicipalityController::class, 'getMunicipalities'])->name('get_municipalities');
+Route::get('get_cities/{state_id}', [CityController::class, 'getCities'])->name('get_cities');
+
+
+
+Route::group(array('middleware' => array('auth', 'CheckPermision', 'DataImportant', 'CryptId')), function() {
+    Route::get('theme/{theme?}', [UserController::class, 'theme'])->name('theme');
+    Route::get('home', [UserController::class, 'home'])->name('home');
+
+    /* Users */
+    Route::get('U0001', [UserController::class, 'index'])->name('users');
+    Route::get('U0001.create', [UserController::class, 'create'])->name('users.create');
+    Route::get('U0001.edit/{id}', [UserController::class, 'edit'])->name('users.edit');
+    Route::post('U0001.store', [UserController::class, 'store'])->name('users.store');
+    Route::post('U0001.update', [UserController::class, 'update'])->name('users.update');
+    Route::get('U0001.lock_user/{id}', [UserController::class, 'lock_user'])->name('users.lock_user');
+    Route::get('U0001.unlock_user/{id}', [UserController::class, 'unlock_user'])->name('users.unlock_user');
+    Route::get('U0001.reset_password/{id}', [UserController::class, 'reset_password'])->name('users.reset_password');
+    Route::get('U0001.change_password', [UserController::class, 'change_password'])->name('users.change_password');
+    Route::post('U0001.password_update', [UserController::class, 'password_update'])->name('users.password_update');
+    Route::get('U0003', [UserController::class, 'index_logged_users'])->name('logged_users');
+    Route::get('U0003.delete_logged/{id}', [UserController::class, 'delete_logged'])->name('users.delete_logged');
+
+    Route::match(['get', 'post'], 'U0004', [UserController::class, 'restricted_access'])->name('restricted_access');
+    Route::match(['get', 'post'], 'U0005', [UserController::class, 'access_history'])->name('access_history');
+    Route::match(['get', 'post'], 'U0006', [UserController::class, 'failed_login'])->name('failed_login');
+
+    /* Profiles Routes */
+    Route::get('P0001', [ProfileController::class, 'index'])->name('profiles');
+    Route::get('P0001.create', [ProfileController::class, 'create'])->name('profiles.create');
+    Route::post('P0001.store', [ProfileController::class, 'store'])->name('profiles.store');
+    Route::get('P0001.edit/{id}', [ProfileController::class, 'edit'])->name('profiles.edit');
+    Route::post('P0001.update', [ProfileController::class, 'update'])->name('profiles.update');
+    Route::get('P0001.delete/{id}', [ProfileController::class, 'delete'])->name('profiles.delete');
+    Route::get('P0001.reactivate/{id}', [ProfileController::class, 'reactivate'])->name('profiles.reactivate');
+
+    /* Profiles Process Routes */
+    Route::get('P0001.profile_process/{id}', [ProfileProcessController::class, 'index'])->name('profiles.process');
+    Route::post('P0001.store.process', [ProfileProcessController::class, 'store'])->name('profiles.process.store');
+
+    /* Coin type Routes */
+    Route::get('M0001', [TypeCoinController::class, 'index'])->name('typeCoin');
+    Route::post('M0001.store', [TypeCoinController::class, 'store'])->name('typeCoin.store');
+    Route::get('M0001.create', [TypeCoinController::class, 'create'])->name('typeCoin.create');
+    Route::get('M0001.edit/{id}', [TypeCoinController::class, 'edit'])->name('typeCoin.edit');
+    Route::post('M0001.update', [TypeCoinController::class, 'update'])->name('typeCoin.update');
+    Route::get('M0001.delete/{id}', [TypeCoinController::class, 'delete'])->name('typeCoin.delete');
+    Route::get('M0001.activate/{id}', [TypeCoinController::class, 'activate'])->name('typeCoin.activate');
+    Route::get('M0001.change_status/{id}/{action?}', [TypeCoinController::class, 'change_status'])->name('typeCoin.change_status');
+
+    /* Store type Routes */
+    Route::get('M0002', [TypeStorageController::class, 'index'])->name('typeStore');
+    Route::get('M0002.create', [TypeStorageController::class, 'create'])->name('typeStore.create');
+    Route::get('M0002.edit/{id}', [TypeStorageController::class, 'edit'])->name('typeStore.edit');
+    Route::post('M0002.store', [TypeStorageController::class, 'store'])->name('typeStore.store');
+    Route::post('M0002.update', [TypeStorageController::class, 'update'])->name('typeStore.update');
+    Route::get('M0002.change_status/{id}/{action?}', [TypeStorageController::class, 'change_status'])->name('typeStore.change_status');
+
+    /* Banks Routes */
+    Route::get('C0001', [BankController::class, 'index'])->name('banks');
+    Route::get('C0001.create', [BankController::class, 'create'])->name('banks.create');
+    Route::post('C0001.searchIca', [BankController::class, 'searchIca'])->name('banks.searchIca');
+    Route::post('C0001.searchIcabin', [BankController::class, 'searchIcabin'])->name('banks.searchIcabin');
+    Route::post('C0001.searchIcaProcess', [BankController::class, 'searchIcaProcess'])->name('banks.searchIcaProcess');
+    Route::post('C0001.store', [BankController::class, 'store'])->name('banks.store');
+    Route::post('C0001.storeBinProcess', [BankController::class, 'storeBinProcess'])->name('banks.storeBinProcess');
+    Route::get('C0001.icaProcess/{id}', [BankController::class, 'icaProcess'])->name('banks.icaProcess');
+    Route::get('C0001.edit/{id}', [BankController::class, 'edit'])->name('banks.edit');
+    Route::post('C0001.edit', [BankController::class, 'editIca'])->name('banks.editIca');
+    Route::post('C0001.update', [BankController::class, 'update'])->name('banks.update');
+    Route::post('C0001.updateIca', [BankController::class, 'updateIca'])->name('banks.updateIca');
+    Route::post('C0001.updateIcaBin', [BankController::class, 'updateIcaBin'])->name('banks.updateIcaBin');
+    Route::post('C0001.updateIcaProcess', [BankController::class, 'updateIcaProcess'])->name('banks.updateIcaProcess');
+    Route::get('C0001.delete/{id}', [BankController::class, 'delete'])->name('banks.delete');
+    Route::get('P0001.deleteica/{id}', [BankController::class, 'deleteIca'])->name('banks.deleteIca');
+    Route::get('P0001.deletebin/{id}', [BankController::class, 'deleteBin'])->name('banks.deleteBin');
+    Route::get('P0001.deleteprocess/{id}', [BankController::class, 'deleteProcess'])->name('banks.deleteProcess');
+    Route::get('C0001.reactivate/{id}', [BankController::class, 'reactivate'])->name('banks.reactivate');
+    Route::get('P0001.reactivateica/{id}', [BankController::class, 'reactivateIca'])->name('banks.reactivateIca');
+    Route::get('P0001.reactivatebin/{id}', [BankController::class, 'reactivateBin'])->name('banks.reactivateBin');
+    Route::get('P0001.reactivateprocess/{id}', [BankController::class, 'reactivateProcess'])->name('banks.reactivateProcess');
+
+    /* Agencies Routes */
+    Route::get('C0002', [AgencyController::class, 'index'])->name('agency');
+    Route::get('C0002.create', [AgencyController::class, 'create'])->name('agency.create');
+    Route::post('C0002.store', [StorageController::class, 'store'])->name('agency.store');
+    Route::get('C0002.edit/{id}', [AgencyController::class, 'edit'])->name('agency.edit');
+    Route::post('C0002.update', [StorageController::class, 'update'])->name('agency.update');
+    Route::get('C0002.change_status/{id}/{action}', [StorageController::class, 'change_status'])->name('agency.change_status');
+
+
+
+    /* ADMIN POS */
+    Route::get('PO002.register', [PosRegisterController::class, 'pos_register'])->name('pos_register');
+    Route::post('PO002.store', [PosRegisterController::class, 'pos_register_store'])->name('pos_register.store');
+    Route::post('PO002.excel', [PosRegisterController::class, 'save_excel'])->name('pos_register.excel');
+
+    Route::get('PO004.search/{boxes?}', [PosShipmentController::class, 'searchBox'])->name('pos_send_request.search');
+    Route::get('PO004.list_data_search/{pos_request?}', [PosShipmentController::class, 'list_requested_data'])->name('pos_send_request.list_data_search');
+    Route::post('PO004.registerShipmentPos', [PosShipmentController::class, 'registerShipmentPos'])->name('pos_send_request.registerShipmentPos');
+
+    Route::get('PO003.request', [PosRequestController::class, 'pos_request'])->name('pos_request');
+    Route::post('PO003.store', [PosRequestController::class, 'pos_request_store'])->name('pos_request.store');
+    Route::get('PO003.viewPDF', [PosRequestController::class, 'pos_request_viewPDF'])->name('pos_request.viewPDF');
+
+    Route::get('PO004', [PosShipmentController::class, 'pos_send_request'])->name('pos_send_request');
+    Route::get('PO004.consult_available', [PosShipmentController::class, 'show_consult_available'])->name('pos_send_request.consult_available');
+
+
+
+
+
+    Route::get('PO005', [PosShipmentController::class, 'pos_reception'])->name('pos_reception');
+    Route::get('PO005.search/{num_request}', [PosShipmentController::class, 'search'])->name('pos_reception.search');
+    Route::get('PO005.shipment_search/{shipment}', [PosShipmentController::class, 'shipment_search'])->name('pos_reception.shipment_search');
+    Route::post('PO005.store', [PosShipmentController::class, 'store'])->name('pos_reception.store');
+
+    Route::get('PO006', [PosInventoryController::class, 'pos_adaptation'])->name('pos_adaptation');
+    Route::get('PO006.search/{boxes?}', [PosInventoryController::class, 'search'])->name('pos_adaptation.search');
+    Route::get('PO006.serial_search/{id}', [PosInventoryController::class, 'serial_search'])->name('pos_adaptation.serial_search');
+    Route::get('PO006.search_model', [PosInventoryController::class, 'search_model'])->name('pos_adaptation.search_model');
+    Route::get('PO006.show_serial/{serial?}', [PosInventoryController::class, 'show_serial'])->name('pos_adaptation.show_serial');
+    Route::post('PO006.store', [PosInventoryController::class, 'store'])->name('pos_adaptation.store');
+    Route::post('PO006.detailed_store', [PosInventoryController::class, 'detailed_store'])->name('pos_adaptation.detailed_store');
+
+    Route::get('PO007', [PosInventoryController::class, 'pos_configuration'])->name('pos_configuration');
+    Route::post('PO007.store_avaliable', [PosInventoryController::class, 'store_avaliable'])->name('pos_configuration.store_avaliable');
+
+
+
+    /* ADMIN CLIENTS */
+    Route::get('CL001', [ClientController::class, 'index'])->name('client');
+    Route::post('CL001.search_client', [ClientController::class, 'search_client'])->name('client.search_client');
+    //Route::get('CL001.search_representatives', [ClientController::class, 'search_representatives'])->name('client.search_representatives');
+	Route::get('CL001.search_representatives/{type}/{document}', [ClientController::class, 'search_representatives'])->name('client.search_representatives');
+    Route::post('CL001.decision', [ClientController::class, 'decision'])->name('client.decision');
+    Route::get('CL001.form_natural_person', [ClientController::class, 'form_natural_person'])->name('client.form_natural_person');
+    Route::get('CL001.form_juridic_person', [ClientController::class, 'form_juridic_person'])->name('client.form_juridic_person');
+    Route::post('CL001.store_person_natural', [ClientController::class, 'store_person_natural'])->name('client.store_person_natural');
+    Route::post('CL001.store_person_juridic', [ClientController::class, 'store_person_juridic'])->name('client.store_person_juridic');
+    Route::post('CL001.search_representatives', [ClientController::class, 'client.search_representatives'])->name('client.search_representatives');
+    
+    Route::get('CL002', [ClientController::class, 'pre_opening_account'])->name('pre_opening_account');
+    
+    Route::get('CL003', [ClientController::class, 'client_pos_request'])->name('client_pos_request');
+    
+    Route::get('CL004', [ClientController::class, 'pos_assignment'])->name('pos_assignment');
+});
+
+
+
+/*   
+
+Route::get('/', function () {
+
+    
+      //create pdf document
+      $pdf = new Crabbly\Fpdf\Fpdf;
+      $pdf->AddPage();
+      $pdf->SetFont('Arial','B',16);
+      $pdf->Cell(40,10,'Hello World!');
+      $pdf->Output(); exit;
+      //save file
+      //Storage::put($pdf->Output('S'));
+     
+
+    //   dompdf PDF 
+     	
+      $data = [
+      'titulo' => 'Styde.net'
+      ];
+
+      $pdf = \PDF::loadView('reports.test.pdf', $data);
+
+      return $pdf->download('archivo.pdf');
+     
+
+
+    return view('layouts.default');
+});
+*/

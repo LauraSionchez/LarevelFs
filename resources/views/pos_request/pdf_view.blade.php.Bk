@@ -1,0 +1,12 @@
+<div class="content-table register">
+    <div class="content-space register">
+       
+
+
+        <p> {{ __('Hello') }} <strong></strong>,</p>
+        <p><strong>EN CONSTRUCCION</strong></p>
+
+       
+
+    </div>
+</div>

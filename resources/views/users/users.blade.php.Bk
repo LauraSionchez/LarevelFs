@@ -1,0 +1,90 @@
+<div class="content-table">
+    <h3>{{ __('Users') }}</h3>
+
+        <a class="btn btn-primary title link_ajax"  data-dataType="html" href="{{route('users.create')}}"> {{ __('New +') }} </a>
+ 
+<table class="dataTable table" cellspacing="0" width="100%">
+    <thead>
+        <tr>
+            <th>{{__('Avatar')}}</th>
+            <th>{{__('Full Name')}}</th>
+            <th>{{__('Profile')}}</th>
+            <th>{{__('E-mail')}}</th>
+            <th>{{__('Actions')}}</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($users as $key => $value)
+        <tr>
+            <td><img style="max-width:50px" alt="avatar" class="img-fluid img-thumbnail" src="{{asset('avatar/'.$value['avatar'])}}" /></td>
+            <td>{{$value['name_user'].' '.$value['surname_user']}}</td>
+            <td>{{$value['profile']['name_profile']}}</td>
+            <td>{{$value['email']}}</td>
+			
+            @if($value['locked'] == 0)
+                @if($value['id'] == Auth::user()->id)  
+                <td> 
+                    <a class="btn btn-moderation edit link_ajax" data-dataType = "html" href="{{route('users.edit',$value['crypt_id'])}}"><i class="fa fa-pen"></i> {{ __('Edit') }} </a>                    
+                </td>
+                @else  
+                 @if($value['suspended'] == 1)
+                    <td>{{ __('Suspended')}}</td>
+                      @else                     
+                    <td> 
+                        <a class="btn btn-moderation edit link_ajax" data-dataType = "html" href="{{route('users.edit',$value['crypt_id'])}}"><i class="fa fa-pen"></i> {{ __('Edit') }} </a>
+                      
+                        {{ Form::button('<i class="fas fa-lock"></i>'.' '.__('Block - Suspend'), ['class' => 'btn btn-moderation delete lock', 'data-bs-toggle'=>'modal', 'data-bs-target'=>'#modalBlock','onClick'=>"readData('".$value['crypt_id']."')"]) }}
+
+                        <a class="btn btn-moderation active link_ajax" data-dataType = "json" href="{{route('users.reset_password',$value['crypt_id'])}}"><i class="fas fa-history"></i> {{ __('Reset Password') }} </a>
+                    </td> 
+                    @endif
+                @endif             
+            @else
+            <td> 
+                <a class="btn btn-moderation active link_ajax" data-dataType = "json" href="{{route('users.unlock_user',$value['crypt_id'])}}"><i class="fas fa-lock-open"></i> {{ __('Unlock') }} </a>
+            </td>
+            @endif
+        </tr>
+        @endforeach
+    </tbody>
+</table>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalBlock" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="staticBackdropLabel">{{__('Block or suspend user')}}</h5>
+    
+      </div>
+      <div id="bodyModal1" class="modal-body">
+        ...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{__('Close')}}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function () {
+});
+    
+
+    function readData(id){
+        $.get("{{url('U0001.show_modal')}}/"+id,function(response){
+            $("#bodyModal1").html(response);
+            /*Swal.fire(
+                data['title'],
+                data['message'],
+                data['type_message'],
+            );
+            if(data['status']==1){
+                sendAjax(data['redirect']);
+            }*/
+        });
+        
+    }
+</script>
